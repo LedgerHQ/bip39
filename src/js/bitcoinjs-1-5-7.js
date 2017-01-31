@@ -9421,7 +9421,7 @@ function Address (hash, version) {
   typeForce('Buffer', hash)
 
   assert.strictEqual(hash.length, 20, 'Invalid hash length')
-  assert.strictEqual(version & 0xff, version, 'Invalid version byte')
+  //assert.strictEqual(version & 0xff, version, 'Invalid version byte')
 
   this.hash = hash
   this.version = version
@@ -9445,10 +9445,15 @@ Address.fromOutputScript = function (script, network) {
 }
 
 Address.prototype.toBase58Check = function () {
-  var payload = new Buffer(21)
-  payload.writeUInt8(this.version, 0)
-  this.hash.copy(payload, 1)
-
+  var payload = new Buffer(21);
+  if (this.version > 0xFF) {
+    payload = new Buffer(22);
+    payload.writeUInt16BE(this.version, 0);
+    this.hash.copy(payload, 2);
+  } else {
+    payload.writeUInt8(this.version, 0);
+    this.hash.copy(payload, 1);
+ }
   return base58check.encode(payload)
 }
 
